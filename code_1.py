@@ -35,7 +35,7 @@ class Net(nn.Module):
         
         # BACKBONE
         self.fc1 = nn.Linear(768,1) # first Linear layer that outputs "a" -> vector
-        self.conv1 = nn.Conv2d(3,3,5)
+        self.conv1 = nn.Conv2d(3,33,5)
         self.pool1 = nn.AvgPool2d(2,None)
         
         self.fc2 = nn.Linear(196,1) # second Linear layer that outputs "a" -> vector
