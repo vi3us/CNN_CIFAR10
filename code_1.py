@@ -35,22 +35,22 @@ class Net(nn.Module):
         
         # BACKBONE
         self.fc1 = nn.Linear(768,1) # first Linear layer that outputs "a" -> vector
-        self.conv1 = nn.Conv2d(3,1,5,padding=2)
+        self.conv1 = nn.Conv2d(3,1,5, padding=2)
         self.pool1 = nn.AvgPool2d(2,None)
         
         self.fc2 = nn.Linear(256,1) # second Linear layer that outputs "a" -> vector
-        self.conv2 = nn.Conv2d(1,1,5,padding=2)
+        self.conv2 = nn.Conv2d(1,1,5, padding=2)
         self.pool2 = nn.AvgPool2d(2,None)
 
         self.fc3 = nn.Linear(256,1) # third Linear layer that outputs "a" -> vector
-        self.conv3 = nn.Conv2d(1,1,5)
+        self.conv3 = nn.Conv2d(1,1,5, padding=2)
         self.pool3 = nn.AvgPool2d(2,None)
         
         # CLASSIFIER -> simple MLP model
         self.cpool1 = nn.AvgPool2d(2,None)
-        self.cfc1 = nn.Linear(196, 73)
-        self.cfc2 = nn.Linear(73, 35)
-        self.cfc3 = nn.Linear(35, 10)
+        self.cfc1 = nn.Linear(256, 73)
+        self.cfc2 = nn.Linear(73, 45)
+        self.cfc3 = nn.Linear(45, 10)
         
     def N(self, x, conv, fcN, pool): # function that creates every N block, takes the respective input, conv layer, linear layer and average pool
         device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu') #checks if you can run it on CUDA
@@ -74,24 +74,28 @@ class Net(nn.Module):
 
         m_1 = nn.BatchNorm2d(3).cuda()
         m_2 = nn.BatchNorm2d(1).cuda()
+        m_3 = nn.BatchNorm2d(1).cuda()
 
         x = m_1(x)
         x = self.N(x, self.conv1, self.fc1, self.pool1) # apply first block with respective conv, pool, ...
         x = m_2(x)
         x = self.N(x, self.conv2, self.fc2, self.pool2) # apply second block with respective conv, pool, ...
+        x = m_3(x)
         x = self.N(x, self.conv3, self.fc3, self.pool3)
+        x = m_3(x)
         
         x = self.cpool1(x) # Classifier pool
         x = torch.flatten(x, 1) # flatten all dimensions except batch
         x = F.relu(self.cfc1(x)) # first MLP of the classifier
         x = F.relu(self.cfc2(x)) # second MLP of the classifier
         x = self.cfc3(x) # final MLP of the classifier
+
         return x
 
 device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 learning_rate = 0.0015
-num_epochs = 15
+num_epochs = 11
 
 model = Net()
 model = model.to(device) # pass model to CUDA if available
